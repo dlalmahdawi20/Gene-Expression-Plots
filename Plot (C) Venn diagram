@@ -1,0 +1,93 @@
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib_venn import venn3, venn3_circles
+
+fig, ax = plt.subplots(figsize=(11, 7))
+fig.patch.set_facecolor('white')
+ax.set_facecolor('white')
+
+v = venn3(subsets=(1, 1, 1, 1, 1, 1, 1), ax=ax,
+          set_labels=('', '', ''),
+          set_colors=('#92C5DE', '#F4A582', '#A1D99B'),
+          alpha=0.55)
+
+for label_id in ['100','010','001','110','101','011','111']:
+    lbl = v.get_label_by_id(label_id)
+    if lbl:
+        lbl.set_text('')
+
+# Cell line titles
+ax.text(-0.45, 0.38, 'Cell Line 1',   fontsize=13, fontweight='bold', color='#2166AC', ha='center')
+ax.text( 0.45, 0.38, 'Cell Line 2',  fontsize=13, fontweight='bold', color='#D6604D', ha='center')
+ax.text( 0.00,-0.50, 'Cell Line 3', fontsize=13, fontweight='bold', color='#1A9641', ha='center')
+
+# Center: all three share 10µM — now both CNR1 & CNR2 for all
+ax.text(0.00, 0.00, '10 µM*\n(CNR1 & CNR2)', fontsize=10, fontweight='bold',
+        color='black', ha='center', va='center',
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7, edgecolor='none'))
+
+
+# Cell Line 1 — left
+for i, c in enumerate(other_concs):
+    ax.text(-0.82, 0.22 - i*0.09, c, fontsize=7.5, color='#2166AC',
+            ha='center', va='center', alpha=0.75)
+
+# Cell Line 2 — right
+for i, c in enumerate(other_concs):
+    ax.text(0.82, 0.22 - i*0.09, c, fontsize=7.5, color='#D6604D',
+            ha='center', va='center', alpha=0.75)
+
+# Cell Line 3 — bottom
+for i, c in enumerate(other_concs):
+    ax.text(-0.45 + i*0.15, -0.82, c, fontsize=7.5, color='#1A9641',
+            ha='center', va='center', alpha=0.75, rotation=35)
+
+# Significant annotations — now CNR1 & CNR2 for all three
+ax.annotate('★ 1µM + 10 µM\n(CNR1 & CNR2)',
+            xy=(-0.28, 0.12), fontsize=8, color='#2166AC',
+            ha='center', fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.2', facecolor='#D0E8FF',
+                      alpha=0.8, edgecolor='#2166AC', lw=0.8))
+
+ax.annotate('★ 10 µM\n(CNR1=1.07, CNR2=1.20)',
+            xy=(0.28, 0.12), fontsize=8, color='#D6604D',
+            ha='center', fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.2', facecolor='#FFE0D0',
+                      alpha=0.8, edgecolor='#D6604D', lw=0.8))
+
+ax.annotate('★ 10 µM\n(CNR1=0.32, CNR2=0.73)',
+            xy=(0.00,-0.28), fontsize=8, color='#1A9641',
+            ha='center', fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.2', facecolor='#D0F0D0',
+                      alpha=0.8, edgecolor='#1A9641', lw=0.8))
+
+# Legend box
+legend_lines = [
+    'Significant (≥1.44-fold ↑)',
+    'Log2FC ≥ 0.53',
+    '',
+    'Cell Line 1:  1µM + 10 µM (CNR1 & CNR2)',
+    'Cell Line 2H:  10 µM (CNR1 & CNR2)',
+    'Cell Line 3: 10 µM (CNR1 & CNR2)',
+    '',
+    '★ = significant concentration',
+    'Other concs = not significant',
+    '',
+    '* Shared by all three cell lines',
+    '  (both CNR1 & CNR2)',
+]
+props = dict(boxstyle='round', facecolor='white', edgecolor='black', alpha=0.95, lw=1)
+ax.text(1.08, 0.5, '\n'.join(legend_lines),
+        transform=ax.transAxes, fontsize=8.8,
+        va='center', ha='left', bbox=props, linespacing=1.7)
+
+ax.set_title('Overlap of Significant Upregulation\n(≥ 1.44-fold increase, Log2FC ≥ 0.53)',
+             fontsize=13, fontweight='bold')
+ax.set_xlim(-1.1, 1.1)
+ax.set_ylim(-1.0, 0.75)
+ax.axis('off')
+
+plt.tight_layout()
+plt.savefig('add your path', dpi=300, bbox_inches='tight')
+plt.close()
+print("Plot C")
