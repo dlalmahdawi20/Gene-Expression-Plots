@@ -1,0 +1,111 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.patches import FancyBboxPatch
+
+# ── Verified means ────────────────────────────────────────────────────────────
+means = {
+    'Cell Line 1': {
+        'CNR1': [number, number, number...etc],
+        'CNR2': [number, number, number...etc],
+    },
+    'Cell Line 2': {
+        'CNR1': [number, number, number...etc],
+        'CNR2': [number, number, number...etc],
+    },
+    'Cell Line 3': {
+        'CNR1': [number, number, number...etc],
+        'CNR2': [number, number, number...etc],
+    },
+}
+
+concs      = ['Control','0.01 µM','0.1 µM','1 µM','10 µM','50 µM','100 µM','200 µM']
+cell_lines = ['Cell Line 1', 'Cell Line 2', 'Cell Line 3']
+genes      = ['CNR1', 'CNR2']
+cl_colors  = {'Cell Line 1': '#2166AC', 'Cell Line 2': '#D6604D', 'Cell Line 3': '#1A9641'}
+
+# Build matrix: rows = cell_line x gene, cols = concentrations
+matrix = []
+row_labels = []
+row_cl     = []
+for cl in cell_lines:
+    for gene in genes:
+        matrix.append(means[cl][gene])
+        row_labels.append(gene)
+        row_cl.append(cl)
+
+matrix = np.array(matrix)  # shape (6, 8)
+
+# ── Figure ────────────────────────────────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(13, 5.5))
+fig.patch.set_facecolor('white')
+ax.set_facecolor('white')
+
+# Blue → white → red colormap
+cmap = mcolors.LinearSegmentedColormap.from_list(
+    'bwr', ['#2166AC', '#92C5DE', '#FFFFFF', '#F4A582', '#D6604D'], N=512)
+vmax = 2.5
+norm = mcolors.Normalize(vmin=-vmax, vmax=vmax)
+
+im = ax.imshow(matrix, cmap=cmap, norm=norm, aspect='auto')
+
+# ── Cell text values ──────────────────────────────────────────────────────────
+for r in range(matrix.shape[0]):
+    for c in range(matrix.shape[1]):
+        val = matrix[r, c]
+        # Text color: white on dark, black on light
+        text_color = 'white' if abs(val) > 1.4 else 'black'
+        weight = 'bold' if abs(val) >= 1.0 else 'normal'
+        ax.text(c, r, f'{val:+.2f}',
+                ha='center', va='center',
+                fontsize=9, color=text_color, fontweight=weight)
+
+# ── Axes ticks ────────────────────────────────────────────────────────────────
+ax.set_xticks(range(len(concs)))
+ax.set_xticklabels(concs, fontsize=10, fontweight='bold')
+ax.set_yticks(range(len(row_labels)))
+ax.set_yticklabels(row_labels, fontsize=10, fontstyle='italic')
+ax.xaxis.set_ticks_position('top')
+ax.xaxis.set_label_position('top')
+ax.tick_params(left=False, top=False)
+
+# ── Cell line labels on the left ──────────────────────────────────────────────
+cl_row_map = {'Cell Line 1': [0,1], 'Cell Line 2': [2,3], 'Cell Line 3': [4,5]}
+for cl, rows in cl_row_map.items():
+    mid = np.mean(rows)
+    ax.annotate(cl,
+                xy=(-0.5, mid),
+                xycoords=('data', 'data'),
+                xytext=(-1.3, mid),
+                textcoords=('data', 'data'),
+                fontsize=11, fontweight='bold',
+                color=cl_colors[cl], va='center', ha='right',
+                annotation_clip=False)
+    # Vertical bracket line
+    ax.annotate('', xy=(-0.5, rows[0]-0.45), xycoords=('data','data'),
+                xytext=(-0.5, rows[-1]+0.45), textcoords=('data','data'),
+                arrowprops=dict(arrowstyle='-', color=cl_colors[cl], lw=2),
+                annotation_clip=False)
+
+# Separator lines between cell line groups
+for sep in [1.5, 3.5]:
+    ax.axhline(sep, color='white', linewidth=2.5, zorder=5)
+
+# ── Colorbar ──────────────────────────────────────────────────────────────────
+cbar = fig.colorbar(im, ax=ax, orientation='horizontal',
+                    fraction=0.03, pad=0.18, aspect=40)
+cbar.set_label('Log2 Fold Change', fontsize=10)
+cbar.set_ticks([-2, -1, 0, 1, 2])
+cbar.ax.tick_params(labelsize=9)
+
+ax.set_title('Heatmap of mRNA Expression (Log2 Fold Change)',
+             fontsize=12, fontweight='bold', pad=30)
+
+# Remove spines
+for spine in ax.spines.values():
+    spine.set_visible(False)
+
+plt.tight_layout()
+plt.savefig('Put your path here', dpi=300, bbox_inches='tight')
+plt.close()
+print("Plot B")
