@@ -1,0 +1,139 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
+# ── Data: Log2FC = -ddCt, per replicate, 7 conc. with control ──────────────────────────────────────
+data = {
+    'Cell line 1': {
+        'CB1': {
+            'control': [number, number, number],
+            '0.01uM':  [number, number, number],
+            '0.1uM':   [number, number, number],
+            '1uM':     [number, number, number],
+            '10uM':    [number, number, number],
+            '50uM':    [number, number, number],
+            '100uM':   [number, number, number],
+            '200uM':   [number, number, number],
+        },
+        'CB2': {
+            'control': [number, number, number],
+            '0.01uM':  [number, number, number],
+            '0.1uM':   [number, number, number],
+            '1uM':     [number, number, number],
+            '10uM':    [number, number, number],
+            '50uM':    [number, number, number],
+            '100uM':   [number, number, number],
+            '200uM':   [number, number, number],
+        },
+    },
+    'Cell line 2': {
+        'CB1': {
+            'control': [number, number, number],
+            '0.01uM':  [number, number, number],
+            '0.1uM':   [number, number, number],
+            '1uM':     [number, number, number],
+            '10uM':    [number, number, number],
+            '50uM':    [number, number, number],
+            '100uM':   [number, number, number],
+            '200uM':   [number, number, number],
+        },
+        'CB2': {
+            'control': [number, number, number],
+            '0.01uM':  [number, number, number],
+            '0.1uM':   [number, number, number],
+            '1uM':     [number, number, number],
+            '10uM':    [number, number, number],
+            '50uM':    [number, number, number],
+            '100uM':   [number, number, number],
+            '200uM':   [number, number, number],
+        },
+    },
+    'Cell line 3': {
+        'CB1': {
+            'control': [number, number, number],
+            '0.01uM':  [number, number, number],
+            '0.1uM':   [number, number, number],
+            '1uM':     [number, number, number],
+            '10uM':    [number, number, number],
+            '50uM':    [number, number, number],
+            '100uM':   [number, number, number],
+            '200uM':   [number, number, number],
+        },
+        'CB2': {
+            'control': [0.252, -0.128, -0.123],
+            '0.01uM':  [-0.058, 0.057, 0.122],
+            '0.1uM':   [0.347, 0.097, 0.657],
+            '1uM':     [0.027, 0.362, 0.202],
+            '10uM':    [0.732, 1.102, 0.772],
+            '50uM':    [-0.626, -0.668, -1.353],
+            '100uM':   [-1.006, -1.018, -0.978],
+            '200uM':   [-1.937, -1.088, -2.558],
+        },
+    },
+}
+
+conc_order  = ['control','0.01uM','0.1uM','1uM','10uM','50uM','100uM','200uM']
+conc_values = [0.001, 0.01, 0.1, 1, 10, 50, 100, 200]  # 0.001 = placeholder for control on log axis
+conc_x_labels = ['Control','0.01','0.1','1','10','50','100','200']
+
+cell_styles = {
+    'A549':   {'color': '#2166AC', 'marker': 'o'},  # blue
+    'NCI-H':  {'color': '#D6604D', 'marker': 's'},  # red
+    'Calu-3': {'color': '#1A9641', 'marker': '^'},  # green
+}
+
+fig, axes = plt.subplots(1, 2, figsize=(13, 5.5), sharey=True)
+fig.patch.set_facecolor('white')
+
+genes = ['CB1', 'CB2']
+gene_titles = ['Gene 1: CB1', 'Gene 2: CB2']
+
+for ax, gene, gtitle in zip(axes, genes, gene_titles):
+    ax.set_facecolor('white')
+    ax.axhline(0, color='gray', linestyle='--', linewidth=0.9, alpha=0.7, zorder=1)
+
+    for cl, style in cell_styles.items():
+        means, sds = [], []
+        for conc in conc_order:
+            vals = data[cl][gene][conc]
+            means.append(np.mean(vals))
+            sds.append(np.std(vals, ddof=1))
+
+        means = np.array(means)
+        sds   = np.array(sds)
+
+        ax.errorbar(conc_values, means, yerr=sds,
+                    fmt=style['marker'] + '-',
+                    color=style['color'],
+                    markersize=6, linewidth=1.8,
+                    capsize=3, capthick=1.2,
+                    elinewidth=1.2,
+                    label=cl, zorder=3)
+
+    ax.set_xscale('log')
+    ax.set_xlim(0.007, 300)
+    ax.set_ylim(-3.2, 3.2)
+
+    # Custom x tick labels
+    ax.set_xticks(conc_values)
+    ax.set_xticklabels(conc_x_labels, fontsize=8.5)
+    ax.xaxis.set_minor_locator(ticker.NullLocator())
+
+    ax.set_xlabel('Concentration of drug (µM)', fontsize=11)
+    ax.set_title(gtitle, fontsize=11, fontstyle='italic', fontweight='bold')
+    ax.grid(True, linestyle=':', alpha=0.35, color='gray')
+    ax.spines[['top','right']].set_visible(False)
+
+axes[0].set_ylabel('Log2 Fold Change\n(Relative to Control)', fontsize=11)
+axes[1].set_ylabel('')
+
+# Shared legend inside right plot
+axes[1].legend(title='Cell lines', fontsize=9, title_fontsize=9,
+               loc='lower left', framealpha=0.9, edgecolor='lightgray')
+
+fig.suptitle('mRNA Expression (qRT-PCR)', fontsize=13, fontweight='bold', y=1.01)
+plt.tight_layout()
+plt.savefig('add your path here', dpi=300, bbox_inches='tight')
+plt.close()
+print("Plot A")
